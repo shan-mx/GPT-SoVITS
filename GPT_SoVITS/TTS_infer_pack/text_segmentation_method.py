@@ -1,40 +1,56 @@
-
-
-
-
 import re
 from typing import Callable
+
 from tools.i18n.i18n import I18nAuto
 
 i18n = I18nAuto()
 
 METHODS = dict()
 
-def get_method(name:str)->Callable:
+
+def get_method(name: str) -> Callable:
     method = METHODS.get(name, None)
     if method is None:
         raise ValueError(f"Method {name} not found")
     return method
 
+
 def register_method(name):
     def decorator(func):
         METHODS[name] = func
         return func
+
     return decorator
 
-splits = {"，", "。", "？", "！", ",", ".", "?", "!", "~", ":", "：", "—", "…", }
+
+splits = {
+    "，",
+    "。",
+    "？",
+    "！",
+    ",",
+    ".",
+    "?",
+    "!",
+    "~",
+    ":",
+    "：",
+    "—",
+    "…",
+}
+
 
 def split_big_text(text, max_len=510):
     # 定义全角和半角标点符号
     punctuation = "".join(splits)
 
     # 切割文本
-    segments = re.split('([' + punctuation + '])', text)
-    
+    segments = re.split("([" + punctuation + "])", text)
+
     # 初始化结果列表和当前片段
     result = []
-    current_segment = ''
-    
+    current_segment = ""
+
     for segment in segments:
         # 如果当前片段加上新的片段长度超过max_len，就将当前片段加入结果列表，并重置当前片段
         if len(current_segment + segment) > max_len:
@@ -42,13 +58,12 @@ def split_big_text(text, max_len=510):
             current_segment = segment
         else:
             current_segment += segment
-    
+
     # 将最后一个片段加入结果列表
     if current_segment:
         result.append(current_segment)
-    
-    return result
 
+    return result
 
 
 def split(todo_text):
@@ -86,10 +101,11 @@ def cut1(inp):
     if len(split_idx) > 1:
         opts = []
         for idx in range(len(split_idx) - 1):
-            opts.append("".join(inps[split_idx[idx]: split_idx[idx + 1]]))
+            opts.append("".join(inps[split_idx[idx] : split_idx[idx + 1]]))
     else:
         opts = [inp]
     return "\n".join(opts)
+
 
 # 凑50字一切
 @register_method("cut2")
@@ -116,17 +132,20 @@ def cut2(inp):
         opts = opts[:-1]
     return "\n".join(opts)
 
+
 # 按中文句号。切
 @register_method("cut3")
 def cut3(inp):
     inp = inp.strip("\n")
     return "\n".join(["%s" % item for item in inp.strip("。").split("。")])
 
-#按英文句号.切
+
+# 按英文句号.切
 @register_method("cut4")
 def cut4(inp):
     inp = inp.strip("\n")
     return "\n".join(["%s" % item for item in inp.strip(".").split(".")])
+
 
 # 按标点符号切
 # contributed by https://github.com/AI-Hobbyist/GPT-SoVITS/blob/main/GPT_SoVITS/inference_webui.py
@@ -135,18 +154,26 @@ def cut5(inp):
     # if not re.search(r'[^\w\s]', inp[-1]):
     # inp += '。'
     inp = inp.strip("\n")
-    punds = r'[,.;?!、，。？！;：…]'
-    items = re.split(f'({punds})', inp)
+    punds = r"[,.;?!、，。？！;：…]"
+    items = re.split(f"({punds})", inp)
     mergeitems = ["".join(group) for group in zip(items[::2], items[1::2])]
     # 在句子不存在符号或句尾无符号的时候保证文本完整
-    if len(items)%2 == 1:
+    if len(items) % 2 == 1:
         mergeitems.append(items[-1])
     opt = "\n".join(mergeitems)
     return opt
 
 
+@register_method("cut_custom")
+def cut_custom(para):
+    para = re.sub("([。…！？\?~～])([^”’])", r"\1\n\2", para)  # 单字符断句符
+    para = re.sub("(\.{6})([^”’])", r"\1\n\2", para)  # 英文省略号
+    para = re.sub("(\.{3})([^”’])", r"\1\n\2", para)  # 中文省略号
+    para = re.sub("([。！？\?][”’])([^，。！？\?])", r"\1\n\2", para)
+    para = para.rstrip()  # 段尾如果有多余的\n就去掉它
+    return para
 
-if __name__ == '__main__':
-    method = get_method("cut5")
+
+if __name__ == "__main__":
+    method = get_method("cut_custom")
     print(method("你好，我是小明。你好，我是小红。你好，我是小刚。你好，我是小张。"))
-    

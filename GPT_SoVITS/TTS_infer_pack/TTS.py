@@ -776,47 +776,47 @@ class TTS:
         except:
             pass 
         
-    def audio_postprocess(self, 
-                          audio:List[torch.Tensor], 
-                          sr:int, 
-                          batch_index_list:list=None, 
-                          speed_factor:float=1.0, 
-                          split_bucket:bool=True)->tuple[int, np.ndarray]:
+    def audio_postprocess(
+        self,
+        audio: List[torch.Tensor],
+        sr: int,
+        batch_index_list: list = None,
+        speed_factor: float = 1.0,
+        split_bucket: bool = True,
+    ) -> tuple[int, np.ndarray]:
         zero_wav = torch.zeros(
-                        int(self.configs.sampling_rate * 0.3),
-                        dtype=self.precison,
-                        device=self.configs.device
-                    )
-        
+            int(self.configs.sampling_rate * 0.3),
+            dtype=self.precison,
+            device=self.configs.device,
+        )
+
         for i, batch in enumerate(audio):
             for j, audio_fragment in enumerate(batch):
-                max_audio=torch.abs(audio_fragment).max()#简单防止16bit爆音
-                if max_audio>1: audio_fragment/=max_audio
-                audio_fragment:torch.Tensor = torch.cat([audio_fragment, zero_wav], dim=0)
+                max_audio = torch.abs(audio_fragment).max()  # 简单防止16bit爆音
+                if max_audio > 1:
+                    audio_fragment /= max_audio
+                audio_fragment: torch.Tensor = torch.cat(
+                    [audio_fragment, zero_wav], dim=0
+                )
                 audio[i][j] = audio_fragment.cpu().numpy()
-            
-        
+
         if split_bucket:
             audio = self.recovery_order(audio, batch_index_list)
         else:
             # audio = [item for batch in audio for item in batch]
             audio = sum(audio, [])
-            
-            
-        audio = np.concatenate(audio, 0)
-        audio = (audio * 32768).astype(np.int16) 
-        
+
+        # audio = np.concatenate(audio, 0)
+        audio = [(item * 32768).astype(np.int16) for item in audio]
         try:
             if speed_factor != 1.0:
                 audio = speed_change(audio, speed=speed_factor, sr=int(sr))
         except Exception as e:
             print(f"Failed to change speed of audio: \n{e}")
-        
+
         return sr, audio
-            
-        
-        
-       
+
+
 def speed_change(input_audio:np.ndarray, speed:float, sr:int):
     # 将 NumPy 数组转换为原始 PCM 流
     raw_audio = input_audio.astype(np.int16).tobytes()
