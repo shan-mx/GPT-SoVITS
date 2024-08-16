@@ -1,3 +1,5 @@
+*.wav
+*.ogg
 .DS_Store
 __pycache__
 *.pyc
@@ -10,6 +12,5 @@ reference
 GPT_weights
 SoVITS_weights
 TEMP
-
-*.wav
-*.ogg
+ffmpeg*
+ffprobe*
