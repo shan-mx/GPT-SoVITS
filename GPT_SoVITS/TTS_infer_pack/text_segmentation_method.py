@@ -166,6 +166,15 @@ def cut5(inp):
     return "\n".join(opt)
 
 
+@register_method("cut_custom")
+def cut_custom(para):
+    para = re.sub("([?\\~。！？～])([^”’])", r"\1\n\2", para)  # 单字符断句符
+    para = re.sub("(\.{6})([^”’])", r"\1\n\2", para)  # 英文省略号
+    para = re.sub("(\…{2})([^”’])", r"\1\n\2", para)  # 中文省略号
+    para = re.sub("([?\\。！？][”’])([^?\\。！，？])", r"\1\n\2", para)
+    para = para.rstrip()  # 段尾如果有多余的\n就去掉它
+    return para
+
 
 if __name__ == '__main__':
     method = get_method("cut5")

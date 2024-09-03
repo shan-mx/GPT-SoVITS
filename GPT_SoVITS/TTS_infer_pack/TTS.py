@@ -998,8 +998,9 @@ class TTS:
             audio = sum(audio, [])
             
             
-        audio = np.concatenate(audio, 0)
-        audio = (audio * 32768).astype(np.int16) 
+        # audio = np.concatenate(audio, 0)
+        # audio = (audio * 32768).astype(np.int16)
+        audio = [(item * 32768).astype(np.int16) for item in audio] # return a list of splitted sentences
         
         # try:
         #     if speed_factor != 1.0:
