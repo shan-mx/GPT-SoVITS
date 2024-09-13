@@ -103,8 +103,8 @@ async def tts(request: TTSRequest):
     res = []
     for i in audio_sentences:
         wav = io.BytesIO()
-        # output as ogg format
-        sf.write(wav, i, sampling_rate, format="ogg")
+        # return in mp3 format
+        sf.write(wav, i, sampling_rate, format="mp3")
         wav.seek(0)
         res.append(base64.b64encode(wav.read()))
 
