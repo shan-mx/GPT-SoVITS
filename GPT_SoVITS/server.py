@@ -4,6 +4,7 @@ import os
 import time
 
 import httpx
+import numpy as np
 import soundfile as sf
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -103,8 +104,9 @@ async def tts(request: TTSRequest):
     res = []
     for i in audio_sentences:
         wav = io.BytesIO()
-        # return in mp3 format
-        sf.write(wav, i, sampling_rate, format="mp3")
+        # 16bit
+        normalized_audio = ((i / np.max(np.abs(i))) * 32767).astype(np.int16)
+        sf.write(wav, normalized_audio, sampling_rate, format="mp3")
         wav.seek(0)
         res.append(base64.b64encode(wav.read()))
 
